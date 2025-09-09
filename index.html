@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+  <head><meta charset="utf-8"><title>PHAGES test</title></head>
+  <body>
+    <button id="go">Call /analyze</button>
+    <pre id="out"></pre>
+    <script>
+      const API = "https://phages-backend.onrender.com/analyze";
+      document.getElementById("go").onclick = async () => {
+        const form = new URLSearchParams();
+        form.set("user_prompt","please analyze cat belly fluff");
+        // optional: override where to load FAISS from
+        // form.set("faiss_path","https://raw.githubusercontent.com/42-Degrees/phages-index-assets/main/manifest-v2025-08-28.json");
+
+        const r = await fetch(API, {
+          method: "POST",
+          headers: {"Content-Type":"application/x-www-form-urlencoded"},
+          body: form.toString(),
+        });
+        document.getElementById("out").textContent = await r.text();
+      };
+    </script>
+  </body>
+</html>

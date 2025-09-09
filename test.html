@@ -1,0 +1,20 @@
+<!doctype html>
+<meta charset="utf-8" />
+<button id="go">Test /analyze</button>
+<pre id="out"></pre>
+<script>
+document.getElementById('go').onclick = async () => {
+  const params = new URLSearchParams({
+    ecosystem: 'cat bellies',
+    why: 'why so soft',
+    faiss_path: 'https://raw.githubusercontent.com/42-Degrees/phages-index-assets/main/manifest-v2025-08-28.json'
+  });
+  const res = await fetch('https://phages-backend.onrender.com/analyze', {
+    method: 'POST',
+    headers: {'Content-Type':'application/x-www-form-urlencoded'},
+    body: params
+  });
+  const data = await res.json();
+  document.getElementById('out').textContent = JSON.stringify(data, null, 2);
+};
+</script>

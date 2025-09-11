@@ -2,97 +2,71 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>PHAGES – Web Test</title>
+    <title>PHAGES — backend test</title>
     <style>
       body { font-family: system-ui, sans-serif; margin: 2rem; }
       button { padding: .5rem 1rem; margin-right: .5rem; }
-      pre { background:#111; color:#0f0; padding:1rem; min-height:10rem; overflow:auto; }
+      pre { background:#111; color:#0f0; padding:1rem; min-height:12rem; overflow:auto; }
       label { display:block; margin:.75rem 0 .25rem; }
       input { width:100%; padding:.5rem; }
-      .row { display:flex; gap:.5rem; align-items:center; margin:.75rem 0; }
     </style>
   </head>
   <body>
     <h1>PHAGES — backend test</h1>
 
-    <div class="row">
-      <button id="btnHealth">Ping /health</button>
-      <button id="btnAnalyze">Call /analyze</button>
-    </div>
+    <button id="btnHealth">Ping /health</button>
+    <button id="btnAnalyze">Call /analyze</button>
 
     <label>Prompt</label>
-    <input id="prompt" value="please analyze cat belly fluff"/>
+    <input id="prompt" value="please analyze cat belly fluff" />
 
     <label>Manifest URL</label>
-    <input id="manifest" value="https://raw.githubusercontent.com/42-Degrees/phages-index-assets/main/manifest-mini-v1.json"/>
+    <input id="manifest" value="https://raw.githubusercontent.com/42-Degrees/phages-index-assets/main/manifest-mini-v1.json" />
 
     <h3>Output</h3>
     <pre id="out">(waiting)</pre>
 
     <script>
-      const OUT = document.getElementById('out');
+      const backend = "https://phages-backend.onrender.com";
+      const OUT = document.getElementById("out");
+      const show = (x) => OUT.textContent = typeof x === "string" ? x : JSON.stringify(x, null, 2);
 
-      function show(obj) {
-        try { OUT.textContent = typeof obj === 'string' ? obj : JSON.stringify(obj, null, 2); }
-        catch { OUT.textContent = String(obj); }
-      }
-
-      async function callHealth() {
+      async function ping() {
         show("Calling /health …");
         try {
-          const r = await fetch("https://phages-backend.onrender.com/health", {method:"GET"});
-          const j = await r.json();
-          show(j);
+          const r = await fetch(`${backend}/health`);
+          show(await r.json());
         } catch (e) {
-          show("Health fetch failed: " + e);
+          show("Health failed: " + e);
+          console.error(e);
         }
       }
 
-      async function callAnalyze() {
+      async function analyze() {
         show("Calling /analyze …");
         const body = new URLSearchParams({
-          user_prompt: document.getElementById('prompt').value,
-          faiss_path:  document.getElementById('manifest').value
+          user_prompt: document.getElementById("prompt").value,
+          faiss_path:  document.getElementById("manifest").value
         });
+
         try {
-          const r = await fetch("https://phages-backend.onrender.com/analyze", {
+          const r = await fetch(`${backend}/analyze`, {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body
           });
-          let text = await r.text(); // read raw to preserve error bodies
-          try { show(JSON.parse(text)); } catch { show(text); }
+
+          const raw = await r.text();
+          console.log("Status", r.status, "Body", raw);
+          try { show(JSON.parse(raw)); } catch { show(raw); }
         } catch (e) {
-          show("Analyze fetch failed: " + e);
+          show("Analyze failed: " + e);
+          console.error(e);
         }
       }
 
-      const backend = "https://phages-backend.onrender.com";
-
-async function callAnalyze() {
-  const prompt = document.getElementById("prompt").value;
-  const manifest = document.getElementById("manifest").value;
-
-  try {
-    const res = await fetch(`${backend}/analyze`, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        user_prompt: prompt,
-        faiss_path: manifest
-      })
-    });
-    const data = await res.json();
-    document.getElementById("output").textContent =
-      JSON.stringify(data, null, 2);
-  } catch (err) {
-    document.getElementById("output").textContent =
-      "Analyze fetch failed: " + err;
-  }
-}
-
-      document.getElementById('btnHealth').onclick  = callHealth;
-      document.getElementById('btnAnalyze').onclick = callAnalyze;
+      document.getElementById("btnHealth").onclick  = ping;
+      document.getElementById("btnAnalyze").onclick = analyze;
     </script>
   </body>
 </html>
